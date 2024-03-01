@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HIIT Timer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #ffcc99;
+      transition: background-color 1s;
+    }
+
+    #timer {
+      font-size: 18em;
+      margin: 20px;
+      color: #000;
+    }
+
+    #controls {
+      margin-top: 20px;
+    }
+
+    button {
+      font-size: 18px;
+      padding: 10px 20px;
+      margin: 0 10px;
+      cursor: pointer;
+      background-color: #4285f4;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #1a73e8;
+    }
+
+    .top {
+      margin-top: 10%;
+    }
+
+    .middle {
+      width: 80%;
+      height: 33%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .bottom {
+      width: 80%;
+      height: 33%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .box {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      margin-bottom: 1em;
+      font-size: 1.5em;
+      font-weight: 900;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="top">
+    <div id="timer">00:00</div>
+  </div>
+
+  <div class="middle">
+    <div class="box">
+      <label>Elapsed</label>
+      <span id="elapsed">00:00</span>
+    </div>
+    <div class="box">
+      <label>Interval</label>
+      <div><span id="current-interval">0</span> / <span>6</span></div>
+    </div>
+    <div class="box">
+      <label>Remaining</label> <span id="remaining">00:00</span>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="box">
+      <label>Current Interval</label>
+      <div id="current-label"></div>
+      <div id="current-value"></div>
+
+    </div>
+    <div class="box">
+      <label>Up Next</label>
+      <div id="next-label"></div>
+      <div id="next-value"></div>
+    </div>
+  </div>
+
+  <div id="controls">
+    <button onclick="startTimer()">Start</button>
+    <button onclick="pauseTimer()">Pause</button>
+    <button onclick="resetTimer()">Reset</button>
+  </div>
+
+  <script>
+    let warmUpSeconds = 5; // 300
+    let intervals = 6;
+    let highIntensitySeconds = 5;
+    let lowIntensitySeconds = 5;
+    let coolDownSeconds = 5;
+
+    let elapsedSeconds = 0;
+
+    let timer;
+    let timeInSeconds = 0;
+    let isPaused = false;
+
+    // Create workout stages
+    let stages = [{ text: "Warm Up", value: warmUpSeconds }]
+    for (let i = 0; i < intervals; i++) {
+      stages.push({ text: "High Intensity", value: highIntensitySeconds })
+      if (i < intervals - 1) {
+        stages.push({ text: "Low Intensity", value: lowIntensitySeconds })
+      }
+    }
+    stages.push({ text: "Cool Down", value: coolDownSeconds })
+
+    console.log(stages)
+    // stage values in seconds
+    const stagesInSeconds = stages.map((stage, index) => {
+      return stages.slice(0, index + 1).reduce((acc, current) => acc + current.value, 0);
+    })
+
+    console.log(stagesInSeconds)
+    let remainingSeconds = stagesInSeconds[stagesInSeconds.length - 1]
+
+
+    let stageIndex = 0;
+    let currentInterval = 0;
+
+    // Init display
+    document.getElementById("timer").innerText = formatTime(warmUpSeconds);
+    document.getElementById("remaining").innerText = formatTime(remainingSeconds);
+    document.getElementById("current-label").innerText = stages[stageIndex].text
+    document.getElementById("current-value").innerText = formatTime(stages[stageIndex].value);
+    document.getElementById("next-label").innerText = stages[stageIndex + 1].text;
+    document.getElementById("next-value").innerText = formatTime(stages[stageIndex + 1].value);
+
+    function startTimer() {
+      if (!timer) {
+        timer = setInterval(updateTimer, 1000);
+      }
+      isPaused = false;
+    }
+
+    function pauseTimer() {
+      clearInterval(timer);
+      timer = null;
+      isPaused = true;
+    }
+
+    function resetTimer() {
+      clearInterval(timer);
+      timer = null;
+      timeInSeconds = 0;
+      isPaused = false;
+      updateTimerDisplay();
+      updateColor();
+    }
+
+    function updateTimer() {
+      if (!isPaused) {
+        elapsedSeconds++;
+        timeInSeconds++;
+        remainingSeconds--
+
+        stageIndex = stagesInSeconds.findIndex((stageSeconds) => elapsedSeconds < stageSeconds);
+
+        if (stageIndex !== currentInterval) {
+          currentInterval = stageIndex;
+          timeInSeconds = 0;
+        }
+        stage = stages[stageIndex];
+        updateTimerDisplay(stage);
+        updateColor();
+        updateInterval(stageIndex);
+      }
+    }
+
+    function updateTimerDisplay(stage) {
+      document.getElementById("timer").innerText = formatTime(stage.value - timeInSeconds);
+      document.getElementById("elapsed").innerText = formatTime(elapsedSeconds);
+      document.getElementById("remaining").innerText = formatTime(remainingSeconds);
+    }
+
+    function updateColor() {
+      const bodyElement = document.body;
+      const intervalSeconds = timeInSeconds % 90;
+      const currentStage = stages[stageIndex];
+
+      if (currentStage.text === "High Intensity") {
+        bodyElement.style.backgroundColor = "#ccffcc";
+      } else if (currentStage.text === "Low Intensity") {
+        bodyElement.style.backgroundColor = "#ff9999";
+      } else if (currentStage.text === "Warm Up") {
+        bodyElement.style.backgroundColor = "#ffcc99"
+      } else if (currentStage.text === "Cool Down") {
+        bodyElement.style.backgroundColor = "#aacccc"
+      }
+    }
+
+    function updateInterval(stageIndex) {
+      // update interval count e.g. 1/6
+      document.getElementById("current-interval").innerText = Math.floor((stageIndex + 1) / 2);
+
+      // update current interval
+      document.getElementById("current-label").innerText = stages[stageIndex].text
+      document.getElementById("current-value").innerText = formatTime(stages[stageIndex].value);
+
+      // update next interval
+      document.getElementById("next-label").innerText = stages[stageIndex + 1].text;
+      document.getElementById("next-value").innerText = formatTime(stages[stageIndex + 1].value);
+    }
+
+    function padZero(number) {
+      return number < 10 ? `0${number}` : number;
+    }
+
+    function formatTime(timeInSeconds) {
+      const minutes = Math.floor(timeInSeconds / 60);
+      const seconds = timeInSeconds % 60;
+      const formattedTime = `${padZero(minutes)}:${padZero(seconds)}`;
+      return formattedTime;
+    }
+  </script>
+
+</body>
+
+</html>
