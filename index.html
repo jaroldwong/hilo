@@ -78,6 +78,9 @@
       font-weight: 900;
     }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/nosleep/0.12.0/NoSleep.min.js"
+    integrity="sha512-DSzvYfxJWRi3E6vfcGQfL5CqOlApxYrrdqRP3hRCnoiZ0oM6+ccYjbtdzQFUrAOI/ehKk0VKFuKs5GseGPkVjQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 
 <body>
@@ -120,6 +123,8 @@
   </div>
 
   <script>
+    var noSleep = new NoSleep();
+
     let warmUpSeconds = 300;
     let intervals = 6;
     let highIntensitySeconds = 30;
@@ -166,6 +171,7 @@
     function startTimer() {
       if (!timer) {
         timer = setInterval(updateTimer, 1000);
+        noSleep.enable();
       }
       isPaused = false;
     }
