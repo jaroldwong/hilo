@@ -250,12 +250,14 @@
       return formattedTime;
     }
 
-    try {
-      const wakeLock = await navigator.wakeLock.request("screen");
-    } catch (err) {
-      // the wake lock request fails - usually system related, such being low on battery
-      console.log(`${err.name}, ${err.message}`);
-    }
+    navigator.wakeLock.request("screen")
+      .then(wakeLock => {
+        console.log("Wake Lock acquired!");
+      })
+      .catch(err => {
+        // the wake lock request fails - usually system related, such as being low on battery
+        console.log(`${err.name}, ${err.message}`);
+      });
   </script>
 
 </body>
